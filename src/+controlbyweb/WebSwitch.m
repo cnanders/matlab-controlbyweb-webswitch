@@ -1,4 +1,4 @@
-classdef WebSwitch < AbstractWebSwitch
+classdef WebSwitch < controlbyweb.AbstractWebSwitch
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
     
