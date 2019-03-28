@@ -1,4 +1,4 @@
-classdef WebSwitch < handle
+classdef WebSwitch < AbstractWebSwitch
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -64,8 +64,7 @@ classdef WebSwitch < handle
         end
         
         
-        % @param {uint8 1x1} outlet (1 or 2)
-        function l = isOnRelay1(this, u8Outlet)
+        function l = isOnRelay1(this)
             
             cXml = webread(...
                 this.getUrl() ...
@@ -81,7 +80,7 @@ classdef WebSwitch < handle
 
         end
         
-        function l = isOnRelay2(this, u8Outlet)
+        function l = isOnRelay2(this)
             
             cXml = webread(...
                 this.getUrl() ...
