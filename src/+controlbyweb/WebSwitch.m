@@ -2,10 +2,23 @@ classdef WebSwitch < controlbyweb.AbstractWebSwitch
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
     
+    % NOTES 2021.07.01
+    % This device uses webread for every call rather than establishing
+    % a dedicated TCPIP connection.  I'm going to set this up a lot like
+    % matlab-delta-tau-power-pmac
+    %
+    % where we do one request for the state and store it until the next 
+    % call comes in that could change state.  I like this a lot.  
+    % Some variable called lNeedsRefresh that is set to true on any set()  
+    % and gets set to false after the next get fulfilment
+    
     properties (SetAccess = private)
         
         % {char 1xm} tcp/ip host
         cHost = '192.168.1.2'
+        
+        lNeedsRefresh = true;
+        lIsOn = [false false]; % storage
                 
     end
     
@@ -25,11 +38,14 @@ classdef WebSwitch < controlbyweb.AbstractWebSwitch
         
         % Turns on relay 1
         function turnOnRelay1(this)
-                      
+              
+            
             data = webread(...
                 this.getUrl(), ...
                 'relay1State', 1 ...
             );
+        
+            this.lNeedsRefresh = true;
                     
         end
         
@@ -40,6 +56,9 @@ classdef WebSwitch < controlbyweb.AbstractWebSwitch
                 this.getUrl(), ...
                 'relay1State', 0 ...
             );
+        
+            this.lNeedsRefresh = true;
+
                     
         end
         
@@ -50,6 +69,8 @@ classdef WebSwitch < controlbyweb.AbstractWebSwitch
                 this.getUrl(), ...
                 'relay2State', 1 ...
             );
+            this.lNeedsRefresh = true;
+
                     
         end
         
@@ -60,40 +81,67 @@ classdef WebSwitch < controlbyweb.AbstractWebSwitch
                 this.getUrl(), ...
                 'relay2State', 0 ...
             );
+        
+            this.lNeedsRefresh = true;
+
                     
         end
         
+        % Makes call to hardware to get state; sets local storage with
+        % answer; and sets lNeedsRefresh to false.   lNeedsRefresh is
+        % set true by any set coommand
         
-        function l = isOnRelay1(this)
+        function updateRelayState(this)
+            
+            if ~this.lNeedsRefresh
+                return
+            end
+
             
             cXml = webread(...
                 this.getUrl() ...
             );
-        
+
             [cMatch, ceTok] = regexp(cXml, ...
                 '<relay1state>([0-9,]+)<\/relay1state>', ...
                 'match', ...
                 'tokens' ...
              );
-                     
-            l = ceTok{1}{1} == '1';
 
-        end
-        
-        function l = isOnRelay2(this)
+            this.lIsOn(1) = ceTok{1}{1} == '1';
             
-            cXml = webread(...
-                this.getUrl() ...
-            );
-        
             [cMatch, ceTok] = regexp(cXml, ...
                 '<relay2state>([0-9,]+)<\/relay2state>', ...
                 'match', ...
                 'tokens' ...
              );
          
-             l = ceTok{1}{1} == '1';
+            this.lIsOn(2) = ceTok{1}{1} == '1';
+            
+            this.lNeedsRefresh = false;
+            
+            
+        end
+        
+        function l = isOnRelay1(this)
+            
+            if this.lNeedsRefresh
+                this.updateRelayState();
+            end
+            
+            % return local state
+            l = this.lIsOn(1);
 
+        end
+        
+        function l = isOnRelay2(this)
+            
+            if this.lNeedsRefresh
+                this.updateRelayState();
+            end
+            
+            % return local state
+            l = this.lIsOn(2);
             
         end
         
