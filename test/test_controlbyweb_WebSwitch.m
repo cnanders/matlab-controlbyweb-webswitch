@@ -6,7 +6,7 @@ addpath(genpath(fullfile(cDirThis, '..', 'src')));
 clear
 clc
 
-cHost = '192.168.1.2';
+cHost = '192.168.10.30';
 
 device = controlbyweb.WebSwitch(...
     'cHost', cHost ...
